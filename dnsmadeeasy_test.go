@@ -141,7 +141,7 @@ func TestGetDomainRecords(t *testing.T) {
 	if recs, err := client.GetDomainRecords(domain.Id); err != nil {
 		t.Fail()
 	} else {
-		for _, rec := range *recs {
+		for _, rec := range recs {
 			if rec.Name == "a-record" {
 				return
 			}

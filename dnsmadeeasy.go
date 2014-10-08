@@ -52,7 +52,7 @@ type Domain struct {
 
 // DomainRecords holds a list of Records associated to a specific Domain
 type DomainRecords struct {
-	Records      []Record `json:"data"`
+	Records      []*Record `json:"data"`
 	Domain       Domain
 	Page         int
 	TotalPages   int
@@ -88,10 +88,12 @@ func (a *APIError) Error() string {
 	return fmt.Sprintf("API Error. Code:%d Message:%s", a.Code, strings.Join(a.Messages, " "))
 }
 
+// NewClient returns an instance of Client ready to be used for communication with DNS Made Easy's API
 func NewClient(key, secret string) *Client {
 	return &Client{key, secret, 2.0, false}
 }
 
+// CreateDomains creates all the domains passed in its argument. When multiple domains are created at once, the API only returns domain ids.
 func (c *Client) CreateDomains(domainNames []string) ([]uint32, error) {
 
 	var data map[string][]string
@@ -225,7 +227,7 @@ func (c *Client) GetDomainByName(name string) (*Domain, error) {
 	return domain, err
 }
 
-func (c *Client) GetDomainRecords(id uint32) (*[]Record, error) {
+func (c *Client) GetDomainRecords(id uint32) ([]*Record, error) {
 
 	r, err := http.NewRequest("GET", fmt.Sprintf("https://api.sandbox.dnsmadeeasy.com/V2.0/dns/managed/%d/records", id), nil)
 
@@ -236,7 +238,7 @@ func (c *Client) GetDomainRecords(id uint32) (*[]Record, error) {
 	domainRecords := &DomainRecords{}
 	err = c.request(r, domainRecords)
 
-	return &domainRecords.Records, err
+	return domainRecords.Records, err
 }
 
 func (c *Client) AddRecord(domainId uint32, record *Record) error {
