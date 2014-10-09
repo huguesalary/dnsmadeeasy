@@ -15,7 +15,7 @@ I'm also new to go, so please feel free to comment on the code itself, pointing 
 
 # How to use?
 
-```
+```go
 package main
 
 import (
