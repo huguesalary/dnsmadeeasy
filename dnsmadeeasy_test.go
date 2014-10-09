@@ -21,8 +21,8 @@ func init() {
 	flag.StringVar(&domainPrefix, "prefix", "testcases", "Which domain-prefix should the test use. (E.g. 'mydomain')")
 	flag.StringVar(&client.APIKey, "api-key", "", "dnsmadeeasy api key")
 	flag.StringVar(&client.APISecret, "api-secret", "", "dnsmadeeasy api secret")
-	client.Version = 2.0
-	client.TestMode = false
+	client.Version = "2.0"
+	client.Url = fmt.Sprintf(sandboxApiUrlFmt, "2.0")
 	flag.Parse()
 	if client.APIKey == "" || client.APISecret == "" {
 		flag.PrintDefaults()

@@ -15,12 +15,17 @@ import (
 	"time"
 )
 
+const (
+	apiUrlFmt        = "https://api.dnsmadeeasy.com/V%s/dns/managed/"
+	sandboxApiUrlFmt = "https://api.sandbox.dnsmadeeasy.com/V%s/dns/managed/"
+)
+
 // A Client is the basic type of this package. It provides methods for interacting with the DNS Made Easy API.
 type Client struct {
 	APIKey    string
 	APISecret string
-	Version   float32
-	TestMode  bool
+	Version   string
+	Url       string
 }
 
 // DomainList represents a list of Domains
@@ -90,7 +95,7 @@ func (a *APIError) Error() string {
 
 // NewClient returns an instance of Client ready to be used for communication with DNS Made Easy's API
 func NewClient(key, secret string) *Client {
-	return &Client{key, secret, 2.0, false}
+	return &Client{key, secret, "2.0", fmt.Sprintf(apiUrlFmt, "2.0")}
 }
 
 // CreateDomains creates all the domains passed in its argument. When multiple domains are created at once, the API only returns domain ids.
@@ -107,7 +112,7 @@ func (c *Client) CreateDomains(domainNames []string) ([]uint32, error) {
 	}
 
 	buf := bytes.NewReader(body)
-	r, err := http.NewRequest("POST", "https://api.sandbox.dnsmadeeasy.com/V2.0/dns/managed/", buf)
+	r, err := http.NewRequest("POST", c.Url, buf)
 
 	if err != nil {
 		return nil, err
@@ -132,7 +137,7 @@ func (c *Client) CreateDomain(domainName string) (*Domain, error) {
 
 	buf := bytes.NewReader(body)
 
-	r, err := http.NewRequest("POST", "https://api.sandbox.dnsmadeeasy.com/V2.0/dns/managed/", buf)
+	r, err := http.NewRequest("POST", c.Url, buf)
 
 	if err != nil {
 		return nil, err
@@ -156,7 +161,7 @@ func (c *Client) DeleteDomains(ids []uint32) error {
 	}
 
 	buf := bytes.NewReader(body)
-	r, err := http.NewRequest("DELETE", "https://api.sandbox.dnsmadeeasy.com/V2.0/dns/managed", buf)
+	r, err := http.NewRequest("DELETE", c.Url, buf)
 	if err != nil {
 		return err
 	}
@@ -176,7 +181,7 @@ func (c *Client) UpdDomains(ids []uint32, fields map[string]interface{}) error {
 
 	body, err := json.Marshal(data)
 	buf := bytes.NewReader(body)
-	r, err := http.NewRequest("PUT", "https://api.sandbox.dnsmadeeasy.com/V2.0/dns/managed/", buf)
+	r, err := http.NewRequest("PUT", c.Url, buf)
 
 	if err != nil {
 		return err
@@ -187,7 +192,7 @@ func (c *Client) UpdDomains(ids []uint32, fields map[string]interface{}) error {
 
 func (c *Client) GetDomains() (*DomainList, error) {
 
-	r, err := http.NewRequest("GET", "https://api.sandbox.dnsmadeeasy.com/V2.0/dns/managed/", nil)
+	r, err := http.NewRequest("GET", c.Url, nil)
 
 	if err != nil {
 		return nil, err
@@ -201,7 +206,7 @@ func (c *Client) GetDomains() (*DomainList, error) {
 
 func (c *Client) GetDomainById(id uint32) (*Domain, error) {
 
-	r, err := http.NewRequest("GET", fmt.Sprintf("https://api.sandbox.dnsmadeeasy.com/V2.0/dns/managed/%d", id), nil)
+	r, err := http.NewRequest("GET", fmt.Sprintf("%s%d", c.Url, id), nil)
 
 	if err != nil {
 		return nil, err
@@ -215,7 +220,7 @@ func (c *Client) GetDomainById(id uint32) (*Domain, error) {
 
 func (c *Client) GetDomainByName(name string) (*Domain, error) {
 
-	r, err := http.NewRequest("GET", "https://api.sandbox.dnsmadeeasy.com/V2.0/dns/managed/name?domainname="+name, nil)
+	r, err := http.NewRequest("GET", fmt.Sprintf("%sname?domainname=%s", c.Url, name), nil)
 
 	if err != nil {
 		return nil, err
@@ -229,7 +234,7 @@ func (c *Client) GetDomainByName(name string) (*Domain, error) {
 
 func (c *Client) GetDomainRecords(id uint32) ([]*Record, error) {
 
-	r, err := http.NewRequest("GET", fmt.Sprintf("https://api.sandbox.dnsmadeeasy.com/V2.0/dns/managed/%d/records", id), nil)
+	r, err := http.NewRequest("GET", fmt.Sprintf("%s%d/records", c.Url, id), nil)
 
 	if err != nil {
 		return nil, err
@@ -250,7 +255,7 @@ func (c *Client) AddRecord(domainId uint32, record *Record) error {
 	}
 
 	buf := bytes.NewReader(body)
-	r, err := http.NewRequest("POST", fmt.Sprintf("https://api.sandbox.dnsmadeeasy.com/V2.0/dns/managed/%d/records", domainId), buf)
+	r, err := http.NewRequest("POST", fmt.Sprintf("%s%d/records", c.Url, domainId), buf)
 	if err != nil {
 		return nil
 	}
@@ -259,7 +264,7 @@ func (c *Client) AddRecord(domainId uint32, record *Record) error {
 }
 
 func (c *Client) DelRecord(domainId, recordId uint32) error {
-	r, err := http.NewRequest("DELETE", fmt.Sprintf("https://api.sandbox.dnsmadeeasy.com/V2.0/dns/managed/%d/records/%d", domainId, recordId), nil)
+	r, err := http.NewRequest("DELETE", fmt.Sprintf("%s%d/records/%d", c.Url, domainId, recordId), nil)
 	if err != nil {
 		return err
 	}
@@ -277,7 +282,7 @@ func (c *Client) UpdRecord(domainId uint32, record *Record) error {
 
 	buf := bytes.NewReader(body)
 
-	r, err := http.NewRequest("PUT", fmt.Sprintf("https://api.sandbox.dnsmadeeasy.com/V2.0/dns/managed/%d/records/%d", domainId, record.Id), buf)
+	r, err := http.NewRequest("PUT", fmt.Sprintf("%s%d/records/%d", c.Url, domainId, record.Id), buf)
 	if err != nil {
 		return err
 	}
